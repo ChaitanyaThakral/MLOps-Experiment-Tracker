@@ -2,8 +2,14 @@ import './App.css';
 import DbStatus from './components/DbStatus.tsx';
 import RunsTable from './components/RunsTable';
 import ProjectsTable from './components/ProjectsTable';
+import { useState } from 'react';
+import LogRunForm from './components/LogRunForm.tsx';
 
 function App() {
+  // Incrementing triggers RunsTable to re-fetch
+  const [runsRefreshKey, setRunsRefreshKey] = useState(0);
+  const refreshRuns = () => setRunsRefreshKey((k) => k + 1);
+
   return (
     <div className="app">
       <nav className="navbar">
@@ -28,7 +34,8 @@ function App() {
         <section id="runs" className="section">
           <h2>Runs</h2>
           <p className="section-desc">View, log, and delete experiment runs.</p>
-          <RunsTable />
+          <RunsTable refreshKey={runsRefreshKey} />
+          <LogRunForm onSuccess={refreshRuns} />
         </section>
 
         <section id="hyperparameters" className="section">

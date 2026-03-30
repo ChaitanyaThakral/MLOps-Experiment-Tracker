@@ -12,7 +12,11 @@ const COLUMNS = [
   'Config ID',
 ];
 
-export default function RunsTable() {
+interface RunsTableProps {
+  refreshKey?: number;
+}
+
+export default function RunsTable({ refreshKey }: RunsTableProps) {
   const [rows, setRows] = useState<unknown[][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -28,7 +32,7 @@ export default function RunsTable() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [refreshKey]);
 
   if (loading) return <p className="msg-empty">Loading runs...</p>;
   if (error)

@@ -59,3 +59,26 @@
   font-size: 0.9rem;
   color: #666;
 }
+
+.db-status {
+  font-size: 0.78rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.db-status--checking {
+  background: #444;
+  color: #ccc;
+}
+
+.db-status--connected {
+  background: #1a4731;
+  color: #6ee7a0;
+}
+
+.db-status--error {
+  background: #4a1a1a;
+  color: #f87171;
+}

@@ -1,4 +1,5 @@
 import './App.css'
+import DbStatus from "./components/DbStatus.tsx";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
             <a href="#search">Search</a>
             <a href="#analytics">Analytics</a>
           </div>
+          <DbStatus />
         </nav>
 
         <main className="main-content">

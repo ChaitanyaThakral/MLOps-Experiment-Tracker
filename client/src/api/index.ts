@@ -8,3 +8,8 @@ export interface ApiResponse<T = unknown[]> {
     success?: boolean;
     error?: string;
 }
+
+export async function checkDbConnection(): Promise<string> {
+    const res = await fetch('/api/check-db-connection');
+    return res.text();
+}

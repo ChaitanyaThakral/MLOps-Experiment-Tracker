@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { insertRun } from '../api/index';
+import React, { useEffect, useState } from 'react';
+import { fetchHyperparameters, insertRun, insertUses } from '../api/index';
 import type { RunInsertPayload } from '../api/index';
 
 // Maps error codes returned by backend
@@ -12,6 +12,7 @@ const FK_MESSAGES: Record<string, string> = {
     'That Configuration ID does not exist. Please choose a valid configuration.',
   DUPLICATE_ID:
     'A run with that ID already exists. Please use a different Run ID.',
+  FK_PARAMETER: 'One of the selected Hyperparameters does not exist.',
 };
 
 const STATUS = ['COMPLETED', 'FAILED', 'RUNNING'];
@@ -29,11 +30,21 @@ const EMPTY_FORM = {
 
 export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
   const [form, setForm] = useState(EMPTY_FORM);
+  const [hyperparams, setHyperparams] = useState<unknown[][]>([]);
+  const [usesRows, setUsesRows] = useState([
+    { parameter_id: '', hyperparam_value: '' },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+
+  useEffect(() => {
+    fetchHyperparameters()
+      .then(setHyperparams)
+      .catch(() => {});
+  }, []);
 
   const set =
     (field: keyof typeof EMPTY_FORM) =>
@@ -41,6 +52,29 @@ export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
       setForm((prev) => ({ ...prev, [field]: e.target.value }));
       setMessage(null);
     };
+
+  const addUsesRow = () => {
+    setUsesRows((prev) => [
+      ...prev,
+      { parameter_id: '', hyperparam_value: '' },
+    ]);
+  };
+
+  const removeUsesRow = (index: number) => {
+    setUsesRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateUsesRow = (
+    index: number,
+    field: 'parameter_id' | 'hyperparam_value',
+    value: string
+  ) => {
+    setUsesRows((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
 
   const validate = (): string | null => {
     if (!form.run_id || isNaN(Number(form.run_id)))
@@ -79,12 +113,40 @@ export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
     try {
       const result = await insertRun(payload);
       if (result.success) {
-        setMessage({
-          type: 'success',
-          text: `Run #${form.run_id} logged successfully.`,
-        });
-        setForm(EMPTY_FORM);
-        onSuccess();
+        const validUses = usesRows.filter(
+          (r) => r.parameter_id && r.hyperparam_value
+        );
+        let usesErrorMsg = null;
+
+        for (const row of validUses) {
+          const usesResult = await insertUses({
+            run_id: Number(form.run_id),
+            parameter_id: Number(row.parameter_id),
+            hyperparam_value: row.hyperparam_value,
+          });
+          if (!usesResult.success) {
+            const errorCode = usesResult.error ?? '';
+            usesErrorMsg =
+              FK_MESSAGES[errorCode] ?? `Uses insert failed: ${errorCode}`;
+            break;
+          }
+        }
+
+        if (usesErrorMsg) {
+          setMessage({
+            type: 'error',
+            text: `Run #${form.run_id} logged, BUT some hyperparameters failed: ${usesErrorMsg}`,
+          });
+          onSuccess();
+        } else {
+          setMessage({
+            type: 'success',
+            text: `Run #${form.run_id} logged successfully.`,
+          });
+          setForm(EMPTY_FORM);
+          setUsesRows([{ parameter_id: '', hyperparam_value: '' }]);
+          onSuccess();
+        }
       } else {
         const errorCode = result.error ?? '';
         const friendly =
@@ -201,6 +263,57 @@ export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
             onChange={set('end_time')}
           />
         </div>
+      </div>
+
+      <div className="uses-section">
+        <h4>Hyperparameters Used</h4>
+        <p className="section-desc">
+          Add hyperparameters customized for this run.
+        </p>
+        {usesRows.map((row, i) => (
+          <div key={i} className="form-row uses-row">
+            <div className="form-group">
+              <label>Parameter</label>
+              <select
+                value={row.parameter_id}
+                onChange={(e) =>
+                  updateUsesRow(i, 'parameter_id', e.target.value)
+                }
+              >
+                <option value=""></option>
+                {hyperparams.map((hp) => (
+                  <option key={String(hp[0])} value={String(hp[0])}>
+                    #{String(hp[0])} - {String(hp[1])}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Value</label>
+              <input
+                type="text"
+                value={row.hyperparam_value}
+                onChange={(e) =>
+                  updateUsesRow(i, 'hyperparam_value', e.target.value)
+                }
+                placeholder=""
+              />
+            </div>
+            {usesRows.length > 1 && (
+              <button
+                type="button"
+                className="remove-btn"
+                onClick={() => removeUsesRow(i)}
+                title="Remove row"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={addUsesRow} className="add-btn">
+          + Add Hyperparameter
+        </button>
       </div>
 
       <button type="submit" className="primary" disabled={submitting}>

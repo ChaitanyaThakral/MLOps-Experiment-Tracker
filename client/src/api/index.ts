@@ -47,3 +47,33 @@ export async function insertRun(
   });
   return res.json();
 }
+
+export async function fetchHyperparameters(): Promise<unknown[][]> {
+  const res = await fetch('/api/hyperparameters');
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export interface UsesInsertPayload {
+  run_id: number;
+  parameter_id: number;
+  hyperparam_value: string;
+}
+
+export async function insertUses(
+  payload: UsesInsertPayload
+): Promise<ApiResponse> {
+  const res = await fetch('/api/insert-uses', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+// stubs, will implement later
+// PUT /api/update-hyperparameter
+// DELETE /api/delete-run/:id
+// POST /api/select-runs
+// POST /api/project-runs
+// POST /api/join-runs-projects

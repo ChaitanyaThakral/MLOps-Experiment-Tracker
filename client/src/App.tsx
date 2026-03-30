@@ -4,6 +4,7 @@ import RunsTable from './components/RunsTable';
 import ProjectsTable from './components/ProjectsTable';
 import { useState } from 'react';
 import LogRunForm from './components/LogRunForm.tsx';
+import HyperparameterTable from './components/HyperparameterTable';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -43,6 +44,7 @@ function App() {
           <p className="section-desc">
             View and update hyperparameter definitions.
           </p>
+          <HyperparameterTable />
         </section>
 
         <section id="search" className="section">

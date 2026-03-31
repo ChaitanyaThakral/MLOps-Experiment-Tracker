@@ -85,6 +85,58 @@ async function fetchDemotableFromDb() {
     });
 }
 
+async function fetchRuns() {
+    return await withOracleDB(async (connection) => {
+        const result = await connection.execute('SELECT * FROM Run');
+        return result.rows;
+    }).catch((err) => {
+        console.error("fetchRuns Error:", err.message);
+        return [];
+    });
+}
+
+async function fetchProjects() {
+    return await withOracleDB(async (connection) => {
+        const result = await connection.execute('SELECT * FROM Project');
+        return result.rows;
+    }).catch((err) => {
+        console.error("fetchProjects Error:", err.message);
+        return [];
+    });
+}
+
+async function insertRun(run_id, start_time, end_time, execution_status, project_id, model_id, dataset_id, config_id) {
+    const s_time = start_time ? start_time.replace('T', ' ') : null;
+    const e_time = end_time ? end_time.replace('T', ' ') : null;
+
+    return await withOracleDB(async (connection) => {
+        try {
+            const result = await connection.execute(
+                `INSERT INTO Run (run_id, start_time, end_time, execution_status, project_id, model_id, dataset_id, config_id) 
+                 VALUES (:run_id, TO_TIMESTAMP(:s_time, 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP(:e_time, 'YYYY-MM-DD HH24:MI:SS'), :execution_status, :project_id, :model_id, :dataset_id, :config_id)`,
+                { run_id, s_time, e_time, execution_status, project_id, model_id, dataset_id, config_id },
+                { autoCommit: true }
+            );
+            return { success: true, message: "Run inserted successfully!" };
+        } catch (err) {
+            if (err.message.includes("ORA-02291")) {
+                return { 
+                    success: false, 
+                    message: "Insertion failed: One of the IDs provided for Project, Model, Dataset, or Config does not exist in the database." 
+                };
+            }
+            if (err.message.includes("ORA-00001")) {
+                return { 
+                    success: false, 
+                    message: "Insertion failed: A Run with this ID already exists." 
+                };
+            }
+            console.error("Error inserting run:", err);
+            return { success: false, message: "An unexpected database error occurred." };
+        }
+    });
+}
+
 async function initiateDemotable() {
     return await withOracleDB(async (connection) => {
         try {
@@ -148,5 +200,8 @@ module.exports = {
     initiateDemotable, 
     insertDemotable, 
     updateNameDemotable, 
-    countDemotable
+    countDemotable,
+    fetchRuns,
+    fetchProjects,
+    insertRun
 };

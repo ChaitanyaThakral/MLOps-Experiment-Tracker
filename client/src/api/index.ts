@@ -128,9 +128,14 @@ export async function updateHyperparameter(
   return res.json();
 }
 
+export async function deleteRun(runId: number): Promise<ApiResponse> {
+  const res = await fetch(`/api/delete-run/${runId}`, {
+    method: 'DELETE',
+  });
+  return res.json();
+}
+
 // stubs, will implement later
-// PUT /api/update-hyperparameter
-// DELETE /api/delete-run/:id
 // POST /api/select-runs
 // POST /api/project-runs
 // POST /api/join-runs-projects

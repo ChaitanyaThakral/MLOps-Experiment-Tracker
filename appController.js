@@ -15,10 +15,12 @@ router.get('/check-db-connection', async (req, res) => {
     }
 });
 
+/*
 router.get('/demotable', async (req, res) => {
     const tableContent = await appService.fetchDemotableFromDb();
     res.json({data: tableContent});
 });
+*/
 
 router.get('/runs', async (req, res) => {
     const tableContent = await appService.fetchRuns();
@@ -40,6 +42,32 @@ router.post("/insert-run", async (req, res) => {
     }
 });
 
+router.get('/hyperparameters', async (req, res) => {
+    const tableContent = await appService.fetchHyperparameters();
+    res.json({data: tableContent});
+});
+
+router.put('/update-hyperparameter', async (req, res) => {
+    const { parameter_id, hyperparam_name, default_value, is_required, datatype } = req.body;
+    const result = await appService.updateHyperparameter(parameter_id, hyperparam_name, default_value, is_required, datatype);
+    if (result.success) {
+        res.json({ success: true, message: result.message });
+    } else {
+        res.status(400).json({ success: false, error: result.message });
+    }
+});
+
+router.delete('/delete-run/:runId', async (req, res) => {
+    const runId = req.params.runId;
+    const result = await appService.deleteRun(runId);
+    if (result.success) {
+        res.json({ success: true, message: result.message });
+    } else {
+        res.status(400).json({ success: false, error: result.message });
+    }
+});
+
+/*
 router.post("/initiate-demotable", async (req, res) => {
     const initiateResult = await appService.initiateDemotable();
     if (initiateResult) {
@@ -83,6 +111,7 @@ router.get('/count-demotable', async (req, res) => {
         });
     }
 });
+*/
 
 
 module.exports = router;

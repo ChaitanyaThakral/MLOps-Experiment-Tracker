@@ -20,6 +20,26 @@ router.get('/demotable', async (req, res) => {
     res.json({data: tableContent});
 });
 
+router.get('/runs', async (req, res) => {
+    const tableContent = await appService.fetchRuns();
+    res.json({data: tableContent});
+});
+
+router.get('/projects', async (req, res) => {
+    const tableContent = await appService.fetchProjects();
+    res.json({data: tableContent});
+});
+
+router.post("/insert-run", async (req, res) => {
+    const { run_id, start_time, end_time, execution_status, project_id, model_id, dataset_id, config_id } = req.body;
+    const result = await appService.insertRun(run_id, start_time, end_time, execution_status, project_id, model_id, dataset_id, config_id);
+    if (result.success) {
+        res.json({ success: true, message: result.message });
+    } else {
+        res.status(400).json({ success: false, error: result.message });
+    }
+});
+
 router.post("/initiate-demotable", async (req, res) => {
     const initiateResult = await appService.initiateDemotable();
     if (initiateResult) {

@@ -84,6 +84,28 @@ router.post("/select-runs", async (req, res) => {
 });
 
 
+router.post("/join-runs-metrics", async (req, res) => {
+   
+    const { metric_name, max_value } = req.body;
+
+    if (!metric_name || max_value === undefined) {
+        return res.status(400).json({ 
+            success: false, 
+            error: "Both metric_name and max_value must be provided." 
+        });
+    }
+
+    const result = await appService.joinRunsByMetric(metric_name, max_value);
+
+    if (result.success) {
+        res.json({ success: true, data: result.data });
+    } else {
+        res.status(500).json({ success: false, error: result.message });
+    }
+});
+
+
+
 /*
 router.post("/initiate-demotable", async (req, res) => {
     const initiateResult = await appService.initiateDemotable();

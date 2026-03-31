@@ -207,7 +207,7 @@ async function deleteRun(run_id) {
         try {
             const result = await connection.execute(
                 `DELETE FROM Run WHERE run_id = :run_id`,
-                { run_id }, 
+                { run_id },
                 { autoCommit: true }
             );
 
@@ -215,9 +215,9 @@ async function deleteRun(run_id) {
                 return { success: false, message: `Delete failed: No Run found with ID ${run_id}.` };
             }
 
-            return { 
-                success: true, 
-                message: `Run ${run_id} deleted successfully! (Cascaded to associated metrics and hyperparameters)` 
+            return {
+                success: true,
+                message: `Run ${run_id} deleted successfully! (Cascaded to associated metrics and hyperparameters)`
             };
 
         } catch (err) {
@@ -294,10 +294,10 @@ async function selectRuns(conditions) {
 
             if (conditions && conditions.length > 0) {
                 sqlQuery += ` WHERE `;
-                
+
                 const allowedAttributes = ['run_id', 'execution_status', 'project_id', 'model_id', 'dataset_id', 'config_id'];
                 const allowedOperators = ['=', '!=', '>', '<', '>=', '<='];
-                const allowedLogicals = ['AND', 'OR', '']; 
+                const allowedLogicals = ['AND', 'OR', ''];
 
                 for (let i = 0; i < conditions.length; i++) {
                     const cond = conditions[i];
@@ -317,9 +317,9 @@ async function selectRuns(conditions) {
                     }
 
                     const bindKey = `val${i}`;
-                    
+
                     sqlQuery += `${cond.attribute} ${cond.operator} :${bindKey}`;
-                    
+
                     binds[bindKey] = cond.value;
                 }
             }
@@ -334,6 +334,32 @@ async function selectRuns(conditions) {
     });
 }
 
+async function joinRunsByMetric(target_metric_name, max_metric_value) {
+    return await withOracleDB(async (connection) => {
+        try {
+            const result = await connection.execute(
+                `SELECT r.run_id, r.execution_status, r.project_id, m.metric_name, m.metric_value, mt.unit
+                 FROM Run r
+                 JOIN Metric m ON r.run_id = m.run_id
+                 JOIN MetricType mt ON m.metric_name = mt.metric_name
+                 WHERE m.metric_name = :target_metric_name 
+                 AND m.metric_value <= :max_metric_value`,
+                {
+                    target_metric_name: target_metric_name,
+                    max_metric_value: max_metric_value
+                },
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+            return { success: true, data: result.rows };
+
+        } catch (err) {
+            console.error("Error in joinRunsByMetric:", err.message);
+            return { success: false, message: "An unexpected database error occurred during the join." };
+        }
+    });
+}
+
+
 module.exports = {
     testOracleConnection,
     // fetchDemotableFromDb,
@@ -347,5 +373,6 @@ module.exports = {
     fetchHyperparameters,
     updateHyperparameter,
     deleteRun,
-    selectRuns
+    selectRuns,
+    joinRunsByMetric
 };

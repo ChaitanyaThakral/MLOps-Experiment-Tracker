@@ -76,6 +76,7 @@ async function testOracleConnection() {
     });
 }
 
+/*
 async function fetchDemotableFromDb() {
     return await withOracleDB(async (connection) => {
         const result = await connection.execute('SELECT * FROM DEMOTABLE');
@@ -84,6 +85,7 @@ async function fetchDemotableFromDb() {
         return [];
     });
 }
+*/
 
 async function fetchRuns() {
     return await withOracleDB(async (connection) => {
@@ -120,15 +122,15 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
             return { success: true, message: "Run inserted successfully!" };
         } catch (err) {
             if (err.message.includes("ORA-02291")) {
-                return { 
-                    success: false, 
-                    message: "Insertion failed: One of the IDs provided for Project, Model, Dataset, or Config does not exist in the database." 
+                return {
+                    success: false,
+                    message: "Insertion failed: One of the IDs provided for Project, Model, Dataset, or Config does not exist in the database."
                 };
             }
             if (err.message.includes("ORA-00001")) {
-                return { 
-                    success: false, 
-                    message: "Insertion failed: A Run with this ID already exists." 
+                return {
+                    success: false,
+                    message: "Insertion failed: A Run with this ID already exists."
                 };
             }
             console.error("Error inserting run:", err);
@@ -137,6 +139,92 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
     });
 }
 
+async function fetchHyperparameters() {
+    return await withOracleDB(async (connection) => {
+        const result = await connection.execute('SELECT * FROM Hyperparameter');
+        return result.rows;
+    }).catch((err) => {
+        console.error("fetchHyperparameters Error:", err.message);
+        return [];
+    });
+}
+
+async function updateHyperparameter(parameter_id, hyperparam_name, default_value, is_required, datatype) {
+    return await withOracleDB(async (connection) => {
+        try {
+            const updates = [];
+            const binds = { parameter_id };
+
+            if (hyperparam_name !== undefined && hyperparam_name !== null && hyperparam_name !== "") {
+                updates.push("hyperparam_name = :hyperparam_name");
+                binds.hyperparam_name = hyperparam_name;
+            }
+            if (default_value !== undefined && default_value !== null && default_value !== "") {
+                updates.push("default_value = :default_value");
+                binds.default_value = default_value;
+            }
+            if (is_required !== undefined && is_required !== null && is_required !== "") {
+                updates.push("is_required = :is_required");
+                binds.is_required = is_required;
+            }
+            if (datatype !== undefined && datatype !== null && datatype !== "") {
+                updates.push("datatype = :datatype");
+                binds.datatype = datatype;
+            }
+
+            if (updates.length === 0) {
+                return { success: false, message: "No attributes provided to update." };
+            }
+
+            const sqlQuery = `
+                UPDATE Hyperparameter 
+                SET ${updates.join(", ")} 
+                WHERE parameter_id = :parameter_id
+            `;
+
+            const result = await connection.execute(sqlQuery, binds, { autoCommit: true });
+
+            if (result.rowsAffected === 0) {
+                return { success: false, message: "Update failed: No hyperparameter found with that ID." };
+            }
+            return { success: true, message: "Hyperparameter updated successfully!" };
+
+        } catch (err) {
+            if (err.message.includes("ORA-00001")) {
+                return {
+                    success: false,
+                    message: "Update failed: A hyperparameter with that name already exists (UNIQUE constraint)."
+                };
+            }
+            console.error("Error updating hyperparameter:", err.message);
+            return { success: false, message: "An unexpected database error occurred." };
+        }
+    });
+}
+
+// DELETE: Remove a run by ID
+async function deleteRun(run_id) {
+    return await withOracleDB(async (connection) => {
+        try {
+            const result = await connection.execute(
+                `DELETE FROM Run WHERE run_id = :run_id`,
+                [run_id],
+                { autoCommit: true }
+            );
+
+            if (result.rowsAffected === 0) {
+                return { success: false, message: "Delete failed: No run found with that ID." };
+            }
+
+            return { success: true, message: "Run deleted successfully!" };
+        } catch (err) {
+            console.error("Error deleting run:", err.message);
+            return { success: false, message: "An unexpected database error occurred during deletion." };
+        }
+    });
+}
+
+/*
 async function initiateDemotable() {
     return await withOracleDB(async (connection) => {
         try {
@@ -193,15 +281,19 @@ async function countDemotable() {
         return -1;
     });
 }
+*/
 
 module.exports = {
     testOracleConnection,
-    fetchDemotableFromDb,
-    initiateDemotable, 
-    insertDemotable, 
-    updateNameDemotable, 
-    countDemotable,
+    // fetchDemotableFromDb,
+    // initiateDemotable, 
+    // insertDemotable, 
+    // updateNameDemotable, 
+    // countDemotable,
     fetchRuns,
     fetchProjects,
-    insertRun
+    insertRun,
+    fetchHyperparameters,
+    updateHyperparameter,
+    deleteRun
 };

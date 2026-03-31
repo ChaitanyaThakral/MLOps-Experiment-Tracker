@@ -202,21 +202,24 @@ async function updateHyperparameter(parameter_id, hyperparam_name, default_value
     });
 }
 
-// DELETE: Remove a run by ID
 async function deleteRun(run_id) {
     return await withOracleDB(async (connection) => {
         try {
             const result = await connection.execute(
                 `DELETE FROM Run WHERE run_id = :run_id`,
-                [run_id],
+                { run_id }, 
                 { autoCommit: true }
             );
 
             if (result.rowsAffected === 0) {
-                return { success: false, message: "Delete failed: No run found with that ID." };
+                return { success: false, message: `Delete failed: No Run found with ID ${run_id}.` };
             }
 
-            return { success: true, message: "Run deleted successfully!" };
+            return { 
+                success: true, 
+                message: `Run ${run_id} deleted successfully! (Cascaded to associated metrics and hyperparameters)` 
+            };
+
         } catch (err) {
             console.error("Error deleting run:", err.message);
             return { success: false, message: "An unexpected database error occurred during deletion." };

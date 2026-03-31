@@ -24,12 +24,12 @@ router.get('/demotable', async (req, res) => {
 
 router.get('/runs', async (req, res) => {
     const tableContent = await appService.fetchRuns();
-    res.json({data: tableContent});
+    res.json({ data: tableContent });
 });
 
 router.get('/projects', async (req, res) => {
     const tableContent = await appService.fetchProjects();
-    res.json({data: tableContent});
+    res.json({ data: tableContent });
 });
 
 router.post("/insert-run", async (req, res) => {
@@ -44,7 +44,7 @@ router.post("/insert-run", async (req, res) => {
 
 router.get('/hyperparameters', async (req, res) => {
     const tableContent = await appService.fetchHyperparameters();
-    res.json({data: tableContent});
+    res.json({ data: tableContent });
 });
 
 router.put('/update-hyperparameter', async (req, res) => {

@@ -286,6 +286,54 @@ async function countDemotable() {
 }
 */
 
+async function selectRuns(conditions) {
+    return await withOracleDB(async (connection) => {
+        try {
+            let sqlQuery = `SELECT * FROM Run`;
+            const binds = {};
+
+            if (conditions && conditions.length > 0) {
+                sqlQuery += ` WHERE `;
+                
+                const allowedAttributes = ['run_id', 'execution_status', 'project_id', 'model_id', 'dataset_id', 'config_id'];
+                const allowedOperators = ['=', '!=', '>', '<', '>=', '<='];
+                const allowedLogicals = ['AND', 'OR', '']; 
+
+                for (let i = 0; i < conditions.length; i++) {
+                    const cond = conditions[i];
+
+                    if (!allowedAttributes.includes(cond.attribute.toLowerCase())) {
+                        throw new Error(`Invalid attribute: ${cond.attribute}`);
+                    }
+                    if (!allowedOperators.includes(cond.operator)) {
+                        throw new Error(`Invalid operator: ${cond.operator}`);
+                    }
+                    if (!allowedLogicals.includes(cond.logical_op.toUpperCase())) {
+                        throw new Error(`Invalid logical operator: ${cond.logical_op}`);
+                    }
+
+                    if (i > 0) {
+                        sqlQuery += ` ${cond.logical_op.toUpperCase()} `;
+                    }
+
+                    const bindKey = `val${i}`;
+                    
+                    sqlQuery += `${cond.attribute} ${cond.operator} :${bindKey}`;
+                    
+                    binds[bindKey] = cond.value;
+                }
+            }
+
+            const result = await connection.execute(sqlQuery, binds);
+            return { success: true, data: result.rows };
+
+        } catch (err) {
+            console.error("Error in selectRuns:", err.message);
+            return { success: false, message: err.message };
+        }
+    });
+}
+
 module.exports = {
     testOracleConnection,
     // fetchDemotableFromDb,
@@ -298,5 +346,6 @@ module.exports = {
     insertRun,
     fetchHyperparameters,
     updateHyperparameter,
-    deleteRun
+    deleteRun,
+    selectRuns
 };

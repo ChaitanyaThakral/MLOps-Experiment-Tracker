@@ -67,6 +67,23 @@ router.delete('/delete-run/:runId', async (req, res) => {
     }
 });
 
+router.post("/select-runs", async (req, res) => {
+    const { conditions } = req.body;
+
+    if (conditions && !Array.isArray(conditions)) {
+        return res.status(400).json({ success: false, error: "Conditions must be an array." });
+    }
+
+    const result = await appService.selectRuns(conditions);
+
+    if (result.success) {
+        res.json({ success: true, data: result.data });
+    } else {
+        res.status(400).json({ success: false, error: result.message });
+    }
+});
+
+
 /*
 router.post("/initiate-demotable", async (req, res) => {
     const initiateResult = await appService.initiateDemotable();

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import LogRunForm from './components/LogRunForm.tsx';
 import HyperparameterTable from './components/HyperparameterTable';
 import RunSelection from './components/RunSelection';
+import RunProjection from './components/RunProjection';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -55,6 +56,7 @@ function App() {
             columns to display.
           </p>
           <RunSelection />
+          <RunProjection />
         </section>
 
         <section id="analytics" className="section">

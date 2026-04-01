@@ -166,6 +166,59 @@ export async function fetchSelectRuns(
   }
 }
 
+export interface ProjectRunsPayload {
+  attributes: string[];
+}
+
+export async function fetchProjectRuns(
+  payload: ProjectRunsPayload
+): Promise<unknown[][]> {
+  try {
+    const res = await fetch('/api/project-runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Backend not ready');
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.warn('Backend unavailable. Using mock PROJECT_RUNS data.');
+
+    const MOCK_DB = [
+      [101, '2026-01-01T10:00:00', null, 'RUNNING', 1, 1, 1, 1],
+      [
+        102,
+        '2026-01-02T14:30:00',
+        '2026-02-02T15:45:00',
+        'COMPLETED',
+        1,
+        2,
+        1,
+        2,
+      ],
+      [103, '2026-01-05T09:15:00', '2026-03-05T08:00:00', 'FAILED', 2, 3, 2, 3],
+    ];
+
+    const COLUMN_INDEX_MAP: Record<string, number> = {
+      run_id: 0,
+      start_time: 1,
+      end_time: 2,
+      execution_status: 3,
+      project_id: 4,
+      model_id: 5,
+      dataset_id: 6,
+      config_id: 7,
+    };
+
+    return MOCK_DB.map((row) =>
+      payload.attributes.map((attr) => {
+        const idx = COLUMN_INDEX_MAP[attr];
+        return idx !== undefined ? (row[idx] ?? null) : null;
+      })
+    );
+  }
+}
+
 // stubs, will implement later
-// POST /api/project-runs
 // POST /api/join-runs-projects

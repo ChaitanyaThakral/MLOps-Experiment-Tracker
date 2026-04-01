@@ -359,6 +359,155 @@ async function joinRunsByMetric(target_metric_name, max_metric_value) {
     });
 }
 
+async function projectRuns(attributes) {
+    return await withOracleDB(async (connection) => {
+        try {
+            const allowedAttributes = [
+                'run_id',
+                'start_time',
+                'end_time',
+                'execution_status',
+                'project_id',
+                'model_id',
+                'dataset_id',
+                'config_id'
+            ];
+
+            if (!Array.isArray(attributes) || attributes.length === 0) {
+                return { success: false, message: 'At least one attribute must be selected.' };
+            }
+
+            const normalizedAttributes = attributes.map(attr => String(attr).toLowerCase());
+
+            for (const attr of normalizedAttributes) {
+                if (!allowedAttributes.includes(attr)) {
+                    return { success: false, message: `Invalid attribute: ${attr}` };
+                }
+            }
+
+            const sqlQuery = `SELECT ${normalizedAttributes.join(', ')} FROM Run`;
+            const result = await connection.execute(
+                sqlQuery,
+                [],
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return { success: true, data: result.rows };
+        } catch (err) {
+            console.error('projectRuns Error:', err.message);
+            return { success: false, message: 'An unexpected database error occurred.' };
+        }
+    });
+}
+
+async function countRunsPerProject() {
+    return await withOracleDB(async (connection) => {
+        try {
+            const result = await connection.execute(
+                `SELECT project_id, COUNT(*) AS run_count
+                 FROM Run
+                 GROUP BY project_id
+                 ORDER BY project_id`,
+                [],
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return { success: true, data: result.rows };
+        } catch (err) {
+            console.error('countRunsPerProject Error:', err.message);
+            return { success: false, message: 'An unexpected database error occurred.' };
+        }
+    });
+}
+
+
+async function projectsWithMinRuns(minRuns) {
+    return await withOracleDB(async (connection) => {
+        try {
+            if (!Number.isInteger(minRuns) || minRuns < 1) {
+                return { success: false, message: 'minRuns must be a positive integer.' };
+            }
+
+            const result = await connection.execute(
+                `SELECT project_id, COUNT(*) AS run_count
+                 FROM Run
+                 GROUP BY project_id
+                 HAVING COUNT(*) >= :minRuns
+                 ORDER BY project_id`,
+                { minRuns },
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return { success: true, data: result.rows };
+        } catch (err) {
+            console.error('projectsWithMinRuns Error:', err.message);
+            return { success: false, message: 'An unexpected database error occurred.' };
+        }
+    });
+}
+
+async function bestProjectsByMetric(metric_name) {
+    return await withOracleDB(async (connection) => {
+        try {
+            if (!metric_name || typeof metric_name !== 'string') {
+                return { success: false, message: 'metric_name is required.' };
+            }
+
+            const result = await connection.execute(
+                `SELECT r.project_id, AVG(m.metric_value) AS avg_metric
+                 FROM Run r
+                 JOIN Metric m ON r.run_id = m.run_id
+                 WHERE m.metric_name = :metric_name
+                 GROUP BY r.project_id
+                 HAVING AVG(m.metric_value) >= ALL (
+                     SELECT AVG(m2.metric_value)
+                     FROM Run r2
+                     JOIN Metric m2 ON r2.run_id = m2.run_id
+                     WHERE m2.metric_name = :metric_name
+                     GROUP BY r2.project_id
+                 )
+                 ORDER BY r.project_id`,
+                { metric_name: metric_name.toLowerCase() },
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return { success: true, data: result.rows };
+        } catch (err) {
+            console.error('bestProjectsByMetric Error:', err.message);
+            return { success: false, message: 'An unexpected database error occurred.' };
+        }
+    });
+}
+
+async function runsWithAllRequiredHyperparameters() {
+    return await withOracleDB(async (connection) => {
+        try {
+            const result = await connection.execute(
+                `SELECT r.run_id
+                 FROM Run r
+                 WHERE NOT EXISTS (
+                     SELECT h.parameter_id
+                     FROM Hyperparameter h
+                     WHERE h.is_required = 'Y'
+                       AND NOT EXISTS (
+                           SELECT 1
+                           FROM Uses u
+                           WHERE u.run_id = r.run_id
+                             AND u.parameter_id = h.parameter_id
+                       )
+                 )
+                 ORDER BY r.run_id`,
+                [],
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return { success: true, data: result.rows };
+        } catch (err) {
+            console.error('runsWithAllRequiredHyperparameters Error:', err.message);
+            return { success: false, message: 'An unexpected database error occurred.' };
+        }
+    });
+}
 
 module.exports = {
     testOracleConnection,

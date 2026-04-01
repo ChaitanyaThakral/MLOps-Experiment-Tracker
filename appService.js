@@ -89,7 +89,11 @@ async function fetchDemotableFromDb() {
 
 async function fetchRuns() {
     return await withOracleDB(async (connection) => {
-        const result = await connection.execute('SELECT * FROM Run');
+        const result = await connection.execute(
+            'SELECT * FROM Run ORDER BY run_id',
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
         return result.rows;
     }).catch((err) => {
         console.error("fetchRuns Error:", err.message);
@@ -99,7 +103,11 @@ async function fetchRuns() {
 
 async function fetchProjects() {
     return await withOracleDB(async (connection) => {
-        const result = await connection.execute('SELECT * FROM Project');
+        const result = await connection.execute(
+            'SELECT * FROM Project ORDER BY project_id',
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
         return result.rows;
     }).catch((err) => {
         console.error("fetchProjects Error:", err.message);
@@ -113,12 +121,63 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
 
     return await withOracleDB(async (connection) => {
         try {
-            const result = await connection.execute(
-                `INSERT INTO Run (run_id, start_time, end_time, execution_status, project_id, model_id, dataset_id, config_id) 
-                 VALUES (:run_id, TO_TIMESTAMP(:s_time, 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP(:e_time, 'YYYY-MM-DD HH24:MI:SS'), :execution_status, :project_id, :model_id, :dataset_id, :config_id)`,
-                { run_id, s_time, e_time, execution_status, project_id, model_id, dataset_id, config_id },
+            const allowedStatuses = ['COMPLETED', 'FAILED', 'RUNNING'];
+
+            if (!Number.isInteger(Number(run_id))) {
+                return { success: false, message: "run_id must be an integer." };
+            }
+            if (!Number.isInteger(Number(project_id))) {
+                return { success: false, message: "project_id must be an integer." };
+            }
+            if (!Number.isInteger(Number(model_id))) {
+                return { success: false, message: "model_id must be an integer." };
+            }
+            if (!Number.isInteger(Number(dataset_id))) {
+                return { success: false, message: "dataset_id must be an integer." };
+            }
+            if (!Number.isInteger(Number(config_id))) {
+                return { success: false, message: "config_id must be an integer." };
+            }
+            if (!execution_status || !allowedStatuses.includes(String(execution_status).toUpperCase())) {
+                return {
+                    success: false,
+                    message: "execution_status must be COMPLETED, FAILED, or RUNNING."
+                };
+            }
+
+            await connection.execute(
+                `INSERT INTO Run (
+                    run_id,
+                    start_time,
+                    end_time,
+                    execution_status,
+                    project_id,
+                    model_id,
+                    dataset_id,
+                    config_id
+                ) VALUES (
+                    :run_id,
+                    TO_TIMESTAMP(:s_time, 'YYYY-MM-DD HH24:MI:SS'),
+                    TO_TIMESTAMP(:e_time, 'YYYY-MM-DD HH24:MI:SS'),
+                    :execution_status,
+                    :project_id,
+                    :model_id,
+                    :dataset_id,
+                    :config_id
+                )`,
+                {
+                    run_id: Number(run_id),
+                    s_time,
+                    e_time,
+                    execution_status: String(execution_status).toUpperCase(),
+                    project_id: Number(project_id),
+                    model_id: Number(model_id),
+                    dataset_id: Number(dataset_id),
+                    config_id: Number(config_id)
+                },
                 { autoCommit: true }
             );
+
             return { success: true, message: "Run inserted successfully!" };
         } catch (err) {
             if (err.message.includes("ORA-02291")) {
@@ -133,7 +192,7 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
                     message: "Insertion failed: A Run with this ID already exists."
                 };
             }
-            console.error("Error inserting run:", err);
+            console.error("Error inserting run:", err.message);
             return { success: false, message: "An unexpected database error occurred." };
         }
     });
@@ -141,7 +200,11 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
 
 async function fetchHyperparameters() {
     return await withOracleDB(async (connection) => {
-        const result = await connection.execute('SELECT * FROM Hyperparameter');
+        const result = await connection.execute(
+            'SELECT * FROM Hyperparameter ORDER BY parameter_id',
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
         return result.rows;
     }).catch((err) => {
         console.error("fetchHyperparameters Error:", err.message);
@@ -295,38 +358,52 @@ async function selectRuns(conditions) {
             if (conditions && conditions.length > 0) {
                 sqlQuery += ` WHERE `;
 
-                const allowedAttributes = ['run_id', 'execution_status', 'project_id', 'model_id', 'dataset_id', 'config_id'];
+                const allowedAttributes = [
+                    'run_id',
+                    'execution_status',
+                    'project_id',
+                    'model_id',
+                    'dataset_id',
+                    'config_id'
+                ];
                 const allowedOperators = ['=', '!=', '>', '<', '>=', '<='];
                 const allowedLogicals = ['AND', 'OR', ''];
 
                 for (let i = 0; i < conditions.length; i++) {
                     const cond = conditions[i];
 
-                    if (!allowedAttributes.includes(cond.attribute.toLowerCase())) {
+                    if (!cond.attribute || !allowedAttributes.includes(String(cond.attribute).toLowerCase())) {
                         throw new Error(`Invalid attribute: ${cond.attribute}`);
                     }
-                    if (!allowedOperators.includes(cond.operator)) {
+
+                    if (!cond.operator || !allowedOperators.includes(cond.operator)) {
                         throw new Error(`Invalid operator: ${cond.operator}`);
                     }
-                    if (!allowedLogicals.includes(cond.logical_op.toUpperCase())) {
+
+                    const logicalOp = i === 0 ? '' : String(cond.logical_op || '').toUpperCase();
+                    if (i > 0 && !allowedLogicals.includes(logicalOp)) {
                         throw new Error(`Invalid logical operator: ${cond.logical_op}`);
                     }
 
                     if (i > 0) {
-                        sqlQuery += ` ${cond.logical_op.toUpperCase()} `;
+                        sqlQuery += ` ${logicalOp} `;
                     }
 
+                    const attribute = String(cond.attribute).toLowerCase();
                     const bindKey = `val${i}`;
 
-                    sqlQuery += `${cond.attribute} ${cond.operator} :${bindKey}`;
-
+                    sqlQuery += `${attribute} ${cond.operator} :${bindKey}`;
                     binds[bindKey] = cond.value;
                 }
             }
 
-            const result = await connection.execute(sqlQuery, binds);
-            return { success: true, data: result.rows };
+            const result = await connection.execute(
+                sqlQuery,
+                binds,
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
 
+            return { success: true, data: result.rows };
         } catch (err) {
             console.error("Error in selectRuns:", err.message);
             return { success: false, message: err.message };
@@ -511,11 +588,6 @@ async function runsWithAllRequiredHyperparameters() {
 
 module.exports = {
     testOracleConnection,
-    // fetchDemotableFromDb,
-    // initiateDemotable, 
-    // insertDemotable, 
-    // updateNameDemotable, 
-    // countDemotable,
     fetchRuns,
     fetchProjects,
     insertRun,
@@ -523,5 +595,10 @@ module.exports = {
     updateHyperparameter,
     deleteRun,
     selectRuns,
-    joinRunsByMetric
+    joinRunsByMetric,
+    projectRuns,
+    countRunsPerProject,
+    projectsWithMinRuns,
+    bestProjectsByMetric,
+    runsWithAllRequiredHyperparameters
 };

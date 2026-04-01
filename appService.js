@@ -138,6 +138,7 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
             if (!Number.isInteger(Number(config_id))) {
                 return { success: false, message: "config_id must be an integer." };
             }
+
             if (!execution_status || !allowedStatuses.includes(String(execution_status).toUpperCase())) {
                 return {
                     success: false,
@@ -157,8 +158,10 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
                     config_id
                 ) VALUES (
                     :run_id,
-                    TO_TIMESTAMP(:s_time, 'YYYY-MM-DD HH24:MI:SS'),
-                    TO_TIMESTAMP(:e_time, 'YYYY-MM-DD HH24:MI:SS'),
+                    CASE WHEN :s_time IS NULL THEN NULL
+                         ELSE TO_TIMESTAMP(:s_time, 'YYYY-MM-DD HH24:MI:SS') END,
+                    CASE WHEN :e_time IS NULL THEN NULL
+                         ELSE TO_TIMESTAMP(:e_time, 'YYYY-MM-DD HH24:MI:SS') END,
                     :execution_status,
                     :project_id,
                     :model_id,
@@ -179,6 +182,7 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
             );
 
             return { success: true, message: "Run inserted successfully!" };
+
         } catch (err) {
             if (err.message.includes("ORA-02291")) {
                 return {
@@ -192,6 +196,7 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
                     message: "Insertion failed: A Run with this ID already exists."
                 };
             }
+
             console.error("Error inserting run:", err.message);
             return { success: false, message: "An unexpected database error occurred." };
         }

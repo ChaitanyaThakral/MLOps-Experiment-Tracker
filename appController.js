@@ -104,6 +104,59 @@ router.post("/join-runs-metrics", async (req, res) => {
     }
 });
 
+router.post('/project-runs', async (req, res) => {
+    const { attributes } = req.body;
+    const result = await appService.projectRuns(attributes);
+
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(400).json(result);
+    }
+});
+
+router.get('/runs-per-project', async (req, res) => {
+    const result = await appService.countRunsPerProject();
+
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(500).json(result);
+    }
+});
+
+router.post('/projects-with-min-runs', async (req, res) => {
+    const minRuns = Number(req.body.minRuns);
+    const result = await appService.projectsWithMinRuns(minRuns);
+
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(400).json(result);
+    }
+});
+
+router.post('/best-projects-by-metric', async (req, res) => {
+    const { metric_name } = req.body;
+    const result = await appService.bestProjectsByMetric(metric_name);
+
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(400).json(result);
+    }
+});
+
+router.get('/runs-with-all-required-hyperparameters', async (req, res) => {
+    const result = await appService.runsWithAllRequiredHyperparameters();
+
+    if (result.success) {
+        res.json(result);
+    } else {
+        res.status(500).json(result);
+    }
+});
+
 
 
 /*

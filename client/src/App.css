@@ -275,3 +275,61 @@ button.danger:hover:not(:disabled) {
 .add-btn:hover {
   background: #f0f0f0;
 }
+
+.filter-form {
+  margin-top: 0;
+}
+
+.filter-container {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 4px;
+  border: 1px dashed #ccc;
+}
+
+.filter-row {
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.logic-group {
+  max-width: 80px;
+}
+
+.logic-group.hidden-logic {
+  visibility: hidden;
+}
+
+.logic-group select {
+  font-weight: bold;
+}
+
+.operator-group {
+  max-width: 80px;
+}
+
+.filter-row .remove-btn {
+  margin-bottom: 14px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.filter-actions .add-btn {
+  margin-top: 0;
+}
+
+.submit-group {
+  margin-top: 16px;
+}
+
+.results-container {
+  margin-top: 24px;
+}
+
+.results-error {
+  margin-top: 16px;
+}

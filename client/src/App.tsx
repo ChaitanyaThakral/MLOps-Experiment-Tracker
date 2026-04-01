@@ -5,6 +5,7 @@ import ProjectsTable from './components/ProjectsTable';
 import { useState } from 'react';
 import LogRunForm from './components/LogRunForm.tsx';
 import HyperparameterTable from './components/HyperparameterTable';
+import RunSelection from './components/RunSelection';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -50,8 +51,10 @@ function App() {
         <section id="search" className="section">
           <h2>Search</h2>
           <p className="section-desc">
-            Filter runs by any combination of conditions.
+            Filter runs by any combination of conditions, or choose which
+            columns to display.
           </p>
+          <RunSelection />
         </section>
 
         <section id="analytics" className="section">

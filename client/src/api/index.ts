@@ -135,7 +135,37 @@ export async function deleteRun(runId: number): Promise<ApiResponse> {
   return res.json();
 }
 
+export interface SelectClause {
+  logical_op: 'AND' | 'OR' | '';
+  attribute: string;
+  operator: string;
+  value: string;
+}
+
+export interface SelectRunsPayload {
+  conditions: SelectClause[];
+}
+
+export async function fetchSelectRuns(
+  payload: SelectRunsPayload
+): Promise<unknown[][]> {
+  try {
+    const res = await fetch('/api/select-runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Backend not ready');
+    const json = await res.json();
+    return json.data ?? [];
+  } catch (err) {
+    console.warn('Backend unavailable. Using mock SELECT_RUNS data.');
+    return [
+      [103, '2026-01-05T09:15:00', '2026-03-05T08:00:00', 'FAILED', 2, 3, 2, 3],
+    ];
+  }
+}
+
 // stubs, will implement later
-// POST /api/select-runs
 // POST /api/project-runs
 // POST /api/join-runs-projects

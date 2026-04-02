@@ -182,3 +182,16 @@ export async function fetchRunsPerProject(): Promise<
   const json = await res.json();
   return json.data ?? [];
 }
+
+export async function fetchProjectsWithMinRuns(
+  minRuns: number
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch('/api/projects-with-min-runs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ minRuns }),
+  });
+  if (!res.ok) throw new Error('Failed to fetch projects with min runs');
+  const json = await res.json();
+  return json.data ?? [];
+}

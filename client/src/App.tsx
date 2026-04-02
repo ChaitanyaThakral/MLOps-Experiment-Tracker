@@ -9,6 +9,7 @@ import RunSelection from './components/RunSelection';
 import RunProjection from './components/RunProjection';
 import RunsMetricsJoin from './components/RunsMetricsJoin.tsx';
 import ProjectRunsCount from './components/ProjectRunsCount.tsx';
+import ProjectMinRuns from './components/ProjectMinRuns.tsx';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -68,6 +69,7 @@ function App() {
             Run pre-built queries to explore trends across experiments.
           </p>
           <ProjectRunsCount />
+          <ProjectMinRuns />
         </section>
       </main>
     </div>

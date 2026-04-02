@@ -11,7 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function HyperparameterTable() {
-  const [rows, setRows] = useState<unknown[][]>([]);
+  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -43,15 +43,15 @@ export default function HyperparameterTable() {
     load();
   }, []);
 
-  const handleEditClick = (row: unknown[]) => {
+  const handleEditClick = (row: Record<string, unknown>) => {
     setMessage(null);
-    setEditingId(Number(row[0]));
+    setEditingId(Number(row.PARAMETER_ID));
     setEditForm({
-      parameter_id: Number(row[0]),
-      hyperparam_name: String(row[1] || ''),
-      default_value: String(row[2] || ''),
-      is_required: String(row[3] || 'N'),
-      datatype: String(row[4] || ''),
+      parameter_id: Number(row.PARAMETER_ID),
+      hyperparam_name: String(row.HYPERPARAM_NAME || ''),
+      default_value: String(row.DEFAULT_VALUE || ''),
+      is_required: String(row.IS_REQUIRED || 'N'),
+      datatype: String(row.DATATYPE || ''),
     });
   };
 
@@ -138,7 +138,7 @@ export default function HyperparameterTable() {
           </thead>
           <tbody>
             {rows.map((row) => {
-              const parameter_id = Number(row[0]);
+              const parameter_id = Number(row.PARAMETER_ID);
               const isEditing = editingId === parameter_id;
 
               if (isEditing && editForm) {
@@ -199,10 +199,10 @@ export default function HyperparameterTable() {
               return (
                 <tr key={parameter_id}>
                   <td>{parameter_id}</td>
-                  <td>{String(row[1])}</td>
-                  <td>{String(row[2] || '')}</td>
-                  <td>{String(row[3])}</td>
-                  <td>{String(row[4])}</td>
+                  <td>{String(row.HYPERPARAM_NAME || '—')}</td>
+                  <td>{String(row.DEFAULT_VALUE || '')}</td>
+                  <td>{String(row.IS_REQUIRED || '—')}</td>
+                  <td>{String(row.DATATYPE || '—')}</td>
                   <td>
                     <button
                       className="secondary small"

@@ -30,7 +30,7 @@ const EMPTY_FORM = {
 
 export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
   const [form, setForm] = useState(EMPTY_FORM);
-  const [hyperparams, setHyperparams] = useState<unknown[][]>([]);
+  const [hyperparams, setHyperparams] = useState<Record<string, unknown>[]>([]);
   const [usesRows, setUsesRows] = useState([
     { parameter_id: '', hyperparam_value: '' },
   ]);
@@ -282,8 +282,11 @@ export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
               >
                 <option value=""></option>
                 {hyperparams.map((hp) => (
-                  <option key={String(hp[0])} value={String(hp[0])}>
-                    #{String(hp[0])} - {String(hp[1])}
+                  <option
+                    key={String(hp.PARAMETER_ID)}
+                    value={String(hp.PARAMETER_ID)}
+                  >
+                    #{String(hp.PARAMETER_ID)} - {String(hp.HYPERPARAM_NAME)}
                   </option>
                 ))}
               </select>

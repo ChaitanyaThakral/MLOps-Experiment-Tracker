@@ -42,6 +42,16 @@ router.post("/insert-run", async (req, res) => {
     }
 });
 
+router.post("/insert-uses", async (req, res) => {
+    const { run_id, parameter_id, hyperparam_value } = req.body;
+    const result = await appService.insertUses(run_id, parameter_id, hyperparam_value);
+    if (result.success) {
+        res.json({ success: true, message: result.message });
+    } else {
+        res.status(400).json({ success: false, error: result.error || result.message });
+    }
+});
+
 router.get('/hyperparameters', async (req, res) => {
     const tableContent = await appService.fetchHyperparameters();
     res.json({ data: tableContent });

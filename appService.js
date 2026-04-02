@@ -8,8 +8,8 @@ const dbConfig = {
     user: envVariables.ORACLE_USER,
     password: envVariables.ORACLE_PASS,
     connectString: `${envVariables.ORACLE_HOST}:${envVariables.ORACLE_PORT}/${envVariables.ORACLE_DBNAME}`,
-    poolMin: 1,
-    poolMax: 3,
+    poolMin: 0,
+    poolMax: 2,
     poolIncrement: 1,
     poolTimeout: 60
 };
@@ -198,6 +198,42 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
             }
 
             console.error("Error inserting run:", err.message);
+            return { success: false, message: "An unexpected database error occurred." };
+        }
+    });
+}
+
+async function insertUses(run_id, parameter_id, hyperparam_value) {
+    return await withOracleDB(async (connection) => {
+        try {
+            if (!Number.isInteger(Number(run_id))) return { success: false, message: "run_id must be an integer." };
+            if (!Number.isInteger(Number(parameter_id))) return { success: false, message: "parameter_id must be an integer." };
+            if (hyperparam_value === undefined || hyperparam_value === null || hyperparam_value === "") {
+                return { success: false, message: "hyperparam_value cannot be empty." };
+            }
+
+            await connection.execute(
+              `INSERT INTO Uses (run_id, parameter_id, hyperparam_value) 
+                 VALUES (:run_id, :parameter_id, :hyperparam_value)`,
+              {
+                  run_id: Number(run_id),
+                  parameter_id: Number(parameter_id),
+                  hyperparam_value: String(hyperparam_value)
+              },
+              { autoCommit: true }
+            );
+
+            return { success: true, message: "Hyperparameter usage inserted successfully!" };
+
+        } catch (err) {
+            if (err.message.includes("ORA-02291")) {
+                return { success: false, error: "FK_PARAMETER", message: "Insertion failed: The Run ID or Parameter ID does not exist." };
+            }
+            if (err.message.includes("ORA-00001")) {
+                return { success: false, error: "DUPLICATE_ID", message: "Insertion failed: This Run already uses this parameter." };
+            }
+
+            console.error("Error inserting Uses:", err.message);
             return { success: false, message: "An unexpected database error occurred." };
         }
     });
@@ -596,6 +632,7 @@ module.exports = {
     fetchRuns,
     fetchProjects,
     insertRun,
+    insertUses,
     fetchHyperparameters,
     updateHyperparameter,
     deleteRun,

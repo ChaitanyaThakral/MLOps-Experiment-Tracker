@@ -15,7 +15,9 @@ const ALL_ATTRIBUTES = [
 export default function RunProjection() {
   const [available, setAvailable] = useState<string[]>([...ALL_ATTRIBUTES]);
   const [selected, setSelected] = useState<string[]>([]);
-  const [results, setResults] = useState<unknown[][] | null>(null);
+  const [results, setResults] = useState<Record<string, unknown>[] | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -182,13 +184,16 @@ export default function RunProjection() {
               ) : (
                 results.map((row, i) => (
                   <tr key={i}>
-                    {(row as unknown[]).map((cell, j) => (
-                      <td key={j}>
-                        {cell !== null && cell !== undefined
-                          ? String(cell)
-                          : '—'}
-                      </td>
-                    ))}
+                    {selected.map((col, j) => {
+                      const cell = row[col.toUpperCase()];
+                      return (
+                        <td key={j}>
+                          {cell !== null && cell !== undefined
+                            ? String(cell)
+                            : '—'}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}

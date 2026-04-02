@@ -18,7 +18,7 @@ interface RunsTableProps {
 }
 
 export default function RunsTable({ refreshKey }: RunsTableProps) {
-  const [rows, setRows] = useState<unknown[][]>([]);
+  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [message, setMessage] = useState<{
@@ -109,14 +109,50 @@ export default function RunsTable({ refreshKey }: RunsTableProps) {
             </tr>
           ) : (
             rows.map((row, i) => {
-              const runId = Number(row[0]);
+              const runId = Number(row.RUN_ID);
               return (
                 <tr key={i}>
-                  {(row as unknown[]).map((cell, j) => (
-                    <td key={j}>
-                      {cell !== null && cell !== undefined ? String(cell) : '—'}
-                    </td>
-                  ))}
+                  <td>
+                    {row.RUN_ID !== null && row.RUN_ID !== undefined
+                      ? String(row.RUN_ID)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.START_TIME !== null && row.START_TIME !== undefined
+                      ? String(row.START_TIME)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.END_TIME !== null && row.END_TIME !== undefined
+                      ? String(row.END_TIME)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.EXECUTION_STATUS !== null &&
+                    row.EXECUTION_STATUS !== undefined
+                      ? String(row.EXECUTION_STATUS)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.PROJECT_ID !== null && row.PROJECT_ID !== undefined
+                      ? String(row.PROJECT_ID)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.MODEL_ID !== null && row.MODEL_ID !== undefined
+                      ? String(row.MODEL_ID)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.DATASET_ID !== null && row.DATASET_ID !== undefined
+                      ? String(row.DATASET_ID)
+                      : '—'}
+                  </td>
+                  <td>
+                    {row.CONFIG_ID !== null && row.CONFIG_ID !== undefined
+                      ? String(row.CONFIG_ID)
+                      : '—'}
+                  </td>
                   <td>
                     <button
                       className="secondary small"

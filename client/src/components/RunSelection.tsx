@@ -12,22 +12,13 @@ const ATTRIBUTES = [
 
 const OPERATORS = ['=', '!=', '>', '<', '>=', '<='];
 
-const COLUMNS = [
-  'Run ID',
-  'Start Time',
-  'End Time',
-  'Status',
-  'Project ID',
-  'Model ID',
-  'Dataset ID',
-  'Config ID',
-];
-
 export default function RunSelection() {
   const [clauses, setClauses] = useState<SelectClause[]>([
     { logical_op: '', attribute: 'run_id', operator: '=', value: '' },
   ]);
-  const [results, setResults] = useState<unknown[][] | null>(null);
+  const [results, setResults] = useState<Record<string, unknown>[] | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -185,28 +176,67 @@ export default function RunSelection() {
           <table>
             <thead>
               <tr>
-                {COLUMNS.map((col) => (
-                  <th key={col}>{col}</th>
-                ))}
+                <th>Run ID</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Status</th>
+                <th>Project ID</th>
+                <th>Model ID</th>
+                <th>Dataset ID</th>
+                <th>Config ID</th>
               </tr>
             </thead>
             <tbody>
               {results.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMNS.length} className="msg-empty">
+                  <td colSpan={8} className="msg-empty">
                     No runs match your search filters.
                   </td>
                 </tr>
               ) : (
                 results.map((row, i) => (
                   <tr key={i}>
-                    {(row as unknown[]).map((cell, j) => (
-                      <td key={j}>
-                        {cell !== null && cell !== undefined
-                          ? String(cell)
-                          : '—'}
-                      </td>
-                    ))}
+                    <td>
+                      {row.RUN_ID !== null && row.RUN_ID !== undefined
+                        ? String(row.RUN_ID)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.START_TIME !== null && row.START_TIME !== undefined
+                        ? String(row.START_TIME)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.END_TIME !== null && row.END_TIME !== undefined
+                        ? String(row.END_TIME)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.EXECUTION_STATUS !== null &&
+                      row.EXECUTION_STATUS !== undefined
+                        ? String(row.EXECUTION_STATUS)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.PROJECT_ID !== null && row.PROJECT_ID !== undefined
+                        ? String(row.PROJECT_ID)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.MODEL_ID !== null && row.MODEL_ID !== undefined
+                        ? String(row.MODEL_ID)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.DATASET_ID !== null && row.DATASET_ID !== undefined
+                        ? String(row.DATASET_ID)
+                        : '—'}
+                    </td>
+                    <td>
+                      {row.CONFIG_ID !== null && row.CONFIG_ID !== undefined
+                        ? String(row.CONFIG_ID)
+                        : '—'}
+                    </td>
                   </tr>
                 ))
               )}

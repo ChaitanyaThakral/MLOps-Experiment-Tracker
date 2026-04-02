@@ -195,3 +195,25 @@ export async function fetchProjectsWithMinRuns(
   const json = await res.json();
   return json.data ?? [];
 }
+
+export async function fetchBestProjectsByMetric(
+  metricName: string
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch('/api/best-projects-by-metric', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ metric_name: metricName }),
+  });
+  if (!res.ok) throw new Error('Failed to fetch best projects by metric');
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+export async function fetchRunsAllHyperparameters(): Promise<
+  Record<string, unknown>[]
+> {
+  const res = await fetch('/api/runs-with-all-required-hyperparameters');
+  if (!res.ok) throw new Error('Failed to fetch division query');
+  const json = await res.json();
+  return json.data ?? [];
+}

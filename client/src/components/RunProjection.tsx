@@ -75,7 +75,7 @@ export default function RunProjection() {
         className="log-run-form filter-form"
         style={{ marginTop: '24px' }}
       >
-        <h3>Project Columns</h3>
+        <h3>Columns Projection</h3>
         <p className="section-desc">
           Choose which attributes to view and order them. Non-selected
           attributes won't be queried.

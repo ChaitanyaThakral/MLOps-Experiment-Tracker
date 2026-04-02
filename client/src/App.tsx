@@ -10,6 +10,8 @@ import RunProjection from './components/RunProjection';
 import RunsMetricsJoin from './components/RunsMetricsJoin.tsx';
 import ProjectRunsCount from './components/ProjectRunsCount.tsx';
 import ProjectMinRuns from './components/ProjectMinRuns.tsx';
+import ProjectBestMetric from './components/ProjectBestMetric.tsx';
+import RunsAllHyperparameters from './components/RunsAllHyperparameters.tsx';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -70,6 +72,8 @@ function App() {
           </p>
           <ProjectRunsCount />
           <ProjectMinRuns />
+          <ProjectBestMetric />
+          <RunsAllHyperparameters />
         </section>
       </main>
     </div>

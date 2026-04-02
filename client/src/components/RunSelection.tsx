@@ -64,7 +64,7 @@ export default function RunSelection() {
   return (
     <div className="selection-builder">
       <form onSubmit={handleSubmit} className="log-run-form filter-form">
-        <h3>Search Runs</h3>
+        <h3>Select Runs</h3>
         <p className="section-desc">
           Add conditions below to find specific runs.
         </p>

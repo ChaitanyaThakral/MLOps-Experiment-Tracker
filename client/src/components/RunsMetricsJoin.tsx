@@ -49,7 +49,7 @@ export default function RunsMetricsJoin() {
         className="log-run-form filter-form"
         style={{ marginTop: '24px' }}
       >
-        <h3>Join: Runs & Metrics</h3>
+        <h3>Join Runs & Metrics</h3>
         <p className="section-desc">
           Find runs paired with their metrics where the metric value is under a
           certain threshold.

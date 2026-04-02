@@ -165,7 +165,7 @@ export default function LogRunForm({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <form id="log-run-form" onSubmit={handleSubmit} className="log-run-form">
-      <h3>Log a New Run</h3>
+      <h3>Insert a New Run</h3>
 
       <div className="form-row">
         <div className="form-group">

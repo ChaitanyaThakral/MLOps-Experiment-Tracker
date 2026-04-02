@@ -57,6 +57,11 @@ router.get('/hyperparameters', async (req, res) => {
     res.json({ data: tableContent });
 });
 
+router.get('/metric-types', async (req, res) => {
+    const tableContent = await appService.fetchMetricTypes();
+    res.json({ data: tableContent });
+});
+
 router.put('/update-hyperparameter', async (req, res) => {
     const { parameter_id, hyperparam_name, default_value, is_required, datatype } = req.body;
     const result = await appService.updateHyperparameter(parameter_id, hyperparam_name, default_value, is_required, datatype);

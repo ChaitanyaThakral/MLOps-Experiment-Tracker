@@ -173,3 +173,12 @@ export async function fetchJoinRunsMetrics(
   const json = await res.json();
   return json.data ?? [];
 }
+
+export async function fetchRunsPerProject(): Promise<
+  Record<string, unknown>[]
+> {
+  const res = await fetch('/api/runs-per-project');
+  if (!res.ok) throw new Error('Failed to fetch count of runs per project');
+  const json = await res.json();
+  return json.data ?? [];
+}

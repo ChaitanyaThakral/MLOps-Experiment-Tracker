@@ -206,31 +206,50 @@ async function insertRun(run_id, start_time, end_time, execution_status, project
 async function insertUses(run_id, parameter_id, hyperparam_value) {
     return await withOracleDB(async (connection) => {
         try {
-            if (!Number.isInteger(Number(run_id))) return { success: false, message: "run_id must be an integer." };
-            if (!Number.isInteger(Number(parameter_id))) return { success: false, message: "parameter_id must be an integer." };
+            if (!Number.isInteger(Number(run_id))) {
+                return { success: false, message: "run_id must be an integer." };
+            }
+            if (!Number.isInteger(Number(parameter_id))) {
+                return { success: false, message: "parameter_id must be an integer." };
+            }
             if (hyperparam_value === undefined || hyperparam_value === null || hyperparam_value === "") {
                 return { success: false, message: "hyperparam_value cannot be empty." };
             }
 
             await connection.execute(
-              `INSERT INTO Uses (run_id, parameter_id, hyperparam_value) 
-                 VALUES (:run_id, :parameter_id, :hyperparam_value)`,
-              {
-                  run_id: Number(run_id),
-                  parameter_id: Number(parameter_id),
-                  hyperparam_value: String(hyperparam_value)
-              },
-              { autoCommit: true }
+                `INSERT INTO Uses (
+                    run_id,
+                    parameter_id,
+                    hyperparam_value
+                ) VALUES (
+                    :run_id,
+                    :parameter_id,
+                    :hyperparam_value
+                )`,
+                {
+                    run_id: Number(run_id),
+                    parameter_id: Number(parameter_id),
+                    hyperparam_value: String(hyperparam_value)
+                },
+                { autoCommit: true }
             );
 
             return { success: true, message: "Hyperparameter usage inserted successfully!" };
 
         } catch (err) {
             if (err.message.includes("ORA-02291")) {
-                return { success: false, error: "FK_PARAMETER", message: "Insertion failed: The Run ID or Parameter ID does not exist." };
+                return {
+                    success: false,
+                    error: "FK_PARAMETER",
+                    message: "Insertion failed: The Run ID or Parameter ID does not exist."
+                };
             }
             if (err.message.includes("ORA-00001")) {
-                return { success: false, error: "DUPLICATE_ID", message: "Insertion failed: This Run already uses this parameter." };
+                return {
+                    success: false,
+                    error: "DUPLICATE_ID",
+                    message: "Insertion failed: This Run already uses this parameter."
+                };
             }
 
             console.error("Error inserting Uses:", err.message);
@@ -249,6 +268,20 @@ async function fetchHyperparameters() {
         return result.rows;
     }).catch((err) => {
         console.error("fetchHyperparameters Error:", err.message);
+        return [];
+    });
+}
+
+async function fetchMetricTypes() {
+    return await withOracleDB(async (connection) => {
+        const result = await connection.execute(
+            'SELECT metric_name FROM MetricType ORDER BY metric_name',
+            [],
+            { outFormat: oracledb.OUT_FORMAT_OBJECT }
+        );
+        return result.rows;
+    }).catch((err) => {
+        console.error("fetchMetricTypes Error:", err.message);
         return [];
     });
 }
@@ -634,6 +667,7 @@ module.exports = {
     insertRun,
     insertUses,
     fetchHyperparameters,
+    fetchMetricTypes,
     updateHyperparameter,
     deleteRun,
     selectRuns,

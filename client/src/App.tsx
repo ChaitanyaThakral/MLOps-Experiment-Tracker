@@ -8,6 +8,7 @@ import HyperparameterTable from './components/HyperparameterTable';
 import RunSelection from './components/RunSelection';
 import RunProjection from './components/RunProjection';
 import RunsMetricsJoin from './components/RunsMetricsJoin.tsx';
+import ProjectRunsCount from './components/ProjectRunsCount.tsx';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -63,7 +64,10 @@ function App() {
 
         <section id="analytics" className="section">
           <h2>Analytics</h2>
-          <p className="section-desc">Explore trends across experiments.</p>
+          <p className="section-desc">
+            Run pre-built queries to explore trends across experiments.
+          </p>
+          <ProjectRunsCount />
         </section>
       </main>
     </div>

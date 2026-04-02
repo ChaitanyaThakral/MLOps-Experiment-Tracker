@@ -7,6 +7,7 @@ import LogRunForm from './components/LogRunForm.tsx';
 import HyperparameterTable from './components/HyperparameterTable';
 import RunSelection from './components/RunSelection';
 import RunProjection from './components/RunProjection';
+import RunsMetricsJoin from './components/RunsMetricsJoin.tsx';
 
 function App() {
   // Incrementing triggers RunsTable to re-fetch
@@ -57,6 +58,7 @@ function App() {
           </p>
           <RunSelection />
           <RunProjection />
+          <RunsMetricsJoin />
         </section>
 
         <section id="analytics" className="section">

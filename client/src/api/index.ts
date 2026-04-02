@@ -143,5 +143,33 @@ export async function fetchProjectRuns(
   return json.data ?? [];
 }
 
-// stubs, will implement later
-// POST /api/join-runs-projects
+export async function fetchMetricTypes(): Promise<string[]> {
+  const res = await fetch('/api/metric-types');
+  if (!res.ok) throw new Error('Failed to fetch metric types');
+  const json = await res.json();
+
+  if (json.data && json.data.length > 0) {
+    return json.data.map((row: Record<string, unknown>) =>
+      String(row.METRIC_NAME)
+    );
+  }
+  return [];
+}
+
+export interface JoinRunsMetricsPayload {
+  metric_name: string;
+  max_value: number;
+}
+
+export async function fetchJoinRunsMetrics(
+  payload: JoinRunsMetricsPayload
+): Promise<Record<string, unknown>[]> {
+  const res = await fetch('/api/join-runs-metrics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Failed to explicitly join metrics');
+  const json = await res.json();
+  return json.data ?? [];
+}
